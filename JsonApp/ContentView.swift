@@ -7,9 +7,25 @@
 
 import SwiftUI
 
+enum SortBy: String, CaseIterable {
+    case name = "Name"
+    case secondName = "Second Name"
+    case online = "Online"
+}
+
+enum SortOrder: String, CaseIterable {
+    case asc = "Asc"
+    case desc = "Desc"
+}
+
 struct ContentView: View {
     
     @StateObject var appData: AppData
+    
+    @State private var sortBy: SortBy = .name
+    @State private var sortOrder: SortOrder = .asc
+    
+    @State private var searchText: String = ""
     
     init(preview: Bool = false) {
         _appData = StateObject(wrappedValue: AppData(preview: preview))
@@ -19,6 +35,21 @@ struct ContentView: View {
         NavigationView {
             ScrollView {
                 VStack(alignment: .leading) {
+                    
+                    TextField("Search", text: $searchText)
+                    
+                    Picker("Sort by", selection: $sortBy) {
+                        ForEach(SortBy.allCases, id: \.self) {
+                            Text("\($0.rawValue)")
+                        }
+                    }.pickerStyle(.segmented)
+                    
+                    Picker("Sort order", selection: $sortOrder) {
+                        ForEach(SortOrder.allCases, id: \.self) {
+                            Text("\($0.rawValue)")
+                        }
+                    }.pickerStyle(.segmented)
+                    
                     ForEach(appData.users, id: \.id) { user in
                         NavigationLink {
                             UserView(user: user)
@@ -37,9 +68,19 @@ struct ContentView: View {
                 .padding()
             }
             .navigationTitle("Users list")
+            .onChange(of: sortBy, perform: { newSortBy in
+                appData.sortUsers(sortBy: sortBy, sortOrder: sortOrder)
+            })
+            .onChange(of: sortOrder, perform: { newSortOrder in
+                appData.sortUsers(sortBy: sortBy, sortOrder: sortOrder)
+            })
+            .onChange(of: searchText, perform: { newSearchText in
+                appData.searchUsers(text: searchText)
+            })
             .task {
                 appData.loadData()
             }
+            
 
         }
     }

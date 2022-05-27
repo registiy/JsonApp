@@ -18,19 +18,19 @@ class AppData: ObservableObject {
         self.preview = preview
     }
     
-    func loadData() {
+    func loadData(fullReload: Bool = false) {
+        
+        if users.count > 0 && !fullReload {
+            return
+        }
+        
         if preview {
             loadDataFromFile()
         } else {
             Task {
                 await loadDataFromUrl(url: "https://www.hackingwithswift.com/samples/friendface.json")
-                users.sort {
-                    $0.name < $1.name
-                }
             }
         }
-        
-        
     }
     
     func loadDataFromFile() {
@@ -59,6 +59,24 @@ class AppData: ObservableObject {
         } catch {
             print("Error: \(error.localizedDescription)")
         }
+    }
+    
+    func searchUsers(text: String) {
+        if text.count > 0 {
+            Task {
+                await loadDataFromUrl(url: "https://www.hackingwithswift.com/samples/friendface.json")
+                self.users = users.filter {
+                    $0.name.contains(text)
+                }
+            }
+        } else {
+            loadData(fullReload: true)
+        }
+    }
+    
+    func sortUsers(sortBy: SortBy, sortOrder: SortOrder) {
+        
+        
     }
     
 }
